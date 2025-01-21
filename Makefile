@@ -8,12 +8,16 @@ SRC_DIR := src
 OBJ_DIR := obj
 BIN_DIR := bin
 
-# Get the base name of the source file being compiled
-SOURCE := $(wildcard $(SRC_DIR)/*.cpp)
-TARGET := $(BIN_DIR)/$(notdir $(basename $(SOURCE)))
+# Target executable (defaults to the name of the first source file)
+TARGET := $(BIN_DIR)/my_program
 
-# Object files
-OBJS := $(SOURCE:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+# Supported C++ source file extensions
+SRC_EXTS := .cpp .cc .cxx
+HDR_EXTS := .h .hpp
+
+# Find all source files in the SRC_DIR with supported extensions
+SRCS := $(foreach ext, $(SRC_EXTS), $(wildcard $(SRC_DIR)/*$(ext)))
+OBJS := $(SRCS:$(SRC_DIR)/%=$(OBJ_DIR)/%.o)
 
 # Debug vs Release mode
 ifeq ($(mode), release)
@@ -36,7 +40,13 @@ $(TARGET): $(OBJS) | $(BIN_DIR)
 	@echo "Build complete! ($(mode) mode)"
 
 # Compile source files into object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR) $(SRC_DIR)
+$(OBJ_DIR)/%.cpp.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR) $(SRC_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.cc.o: $(SRC_DIR)/%.cc | $(OBJ_DIR) $(SRC_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.cxx.o: $(SRC_DIR)/%.cxx | $(OBJ_DIR) $(SRC_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Clean up build artifacts
