@@ -123,6 +123,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo
     COMMAND ${CMAKE_COMMAND} -E echo "Build successful!"
     COMMAND ${CMAKE_COMMAND} -E echo "Executable: $<TARGET_FILE:${PROJECT_NAME}>"
+    COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # This line runs the executable
 )
 
 # Enhanced clean target
