@@ -131,39 +131,66 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # This line runs the executable
 )
 
-# Enhanced clean target that works cross-platform
+# Revised clean targets - split into separate operations
+# Clean binaries target - safe to run from within the build system
+add_custom_target(clean-all
+    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning binary outputs..."
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
+    COMMENT "Removing binary output files..."
+)
+
+# Instructions for full cleanup
+add_custom_target(clean-instructions
+    COMMAND ${CMAKE_COMMAND} -E echo
+    COMMAND ${CMAKE_COMMAND} -E echo "===== CLEAN OPERATION INSTRUCTIONS ====="
+    COMMAND ${CMAKE_COMMAND} -E echo "To completely clean the project:"
+    COMMAND ${CMAKE_COMMAND} -E echo "1. First run: cmake --build . --target clean-bin"
+    COMMAND ${CMAKE_COMMAND} -E echo "2. Then manually delete the build directory from outside"
+    COMMAND ${CMAKE_COMMAND} -E echo "   the build system (or use the clean-script below)"
+    COMMAND ${CMAKE_COMMAND} -E echo
+    COMMAND ${CMAKE_COMMAND} -E echo "===== CLEANUP SCRIPT CREATED ====="
+)
+
+# Generate cleanup script based on platform
 if(CMAKE_HOST_WIN32)
-    # Windows-specific clean command using a batch file
-    add_custom_target(clean-all
-        COMMAND ${CMAKE_COMMAND} -E echo "Cleaning all build artifacts..."
-        # Clean everything except the build directory itself
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-        # Create a batch file that will delete the build directory
-        COMMAND ${CMAKE_COMMAND} -E echo "@echo off" > ${CMAKE_BINARY_DIR}/clean_build.bat
-        COMMAND ${CMAKE_COMMAND} -E echo "timeout /t 1 /nobreak > nul" >> ${CMAKE_BINARY_DIR}/clean_build.bat
-        COMMAND ${CMAKE_COMMAND} -E echo "rmdir /s /q \"${CMAKE_BINARY_DIR}\"" >> ${CMAKE_BINARY_DIR}/clean_build.bat
-        COMMAND ${CMAKE_COMMAND} -E echo "echo Build directory cleaned!" >> ${CMAKE_BINARY_DIR}/clean_build.bat
-        # Run the batch file in a separate process
-        COMMAND start cmd.exe /c ${CMAKE_BINARY_DIR}/clean_build.bat
-        COMMENT "Removing build artifacts and scheduling build directory cleanup..."
+    # Windows batch script
+    file(WRITE ${CMAKE_SOURCE_DIR}/clean-project.bat
+        "@echo off\n"
+        "echo Cleaning project...\n"
+        "if exist bin rmdir /s /q bin\n"
+        "if exist build rmdir /s /q build\n"
+        "mkdir bin\n"
+        "echo Project cleaned successfully!\n"
+        "pause\n"
+    )
+    add_custom_target(clean-script
+        COMMAND ${CMAKE_COMMAND} -E echo "Windows cleanup script created at: ${CMAKE_SOURCE_DIR}/clean-project.bat"
+        COMMAND ${CMAKE_COMMAND} -E echo "Run this script from Explorer or command prompt when cmake is not running."
+        DEPENDS clean-instructions
+        COMMENT "Generating Windows cleanup script..."
     )
 else()
-    # Linux/Unix clean command
-    add_custom_target(clean-all
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-        # For Linux, we can use a shell script to clean the build directory
-        COMMAND ${CMAKE_COMMAND} -E echo "#!/bin/sh" > ${CMAKE_BINARY_DIR}/clean_build.sh
-        COMMAND ${CMAKE_COMMAND} -E echo "sleep 1" >> ${CMAKE_BINARY_DIR}/clean_build.sh
-        COMMAND ${CMAKE_COMMAND} -E echo "rm -rf \"${CMAKE_BINARY_DIR}\"" >> ${CMAKE_BINARY_DIR}/clean_build.sh
-        COMMAND ${CMAKE_COMMAND} -E echo "echo Build directory cleaned!" >> ${CMAKE_BINARY_DIR}/clean_build.sh
-        COMMAND chmod +x ${CMAKE_BINARY_DIR}/clean_build.sh
-        COMMAND ${CMAKE_BINARY_DIR}/clean_build.sh &
-        COMMENT "Removing all build artifacts and binaries..."
+    # Unix shell script
+    file(WRITE ${CMAKE_SOURCE_DIR}/clean-project.sh
+        "#!/bin/sh\n"
+        "echo Cleaning project...\n"
+        "rm -rf bin\n"
+        "rm -rf build\n"
+        "mkdir -p bin\n"
+        "echo Project cleaned successfully!\n"
+    )
+    add_custom_target(clean-script
+        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/clean-project.sh
+        COMMAND ${CMAKE_COMMAND} -E echo "Unix cleanup script created at: ${CMAKE_SOURCE_DIR}/clean-project.sh"
+        COMMAND ${CMAKE_COMMAND} -E echo "Run this script from terminal when cmake is not running."
+        DEPENDS clean-instructions
+        COMMENT "Generating Unix cleanup script..."
     )
 endif()
+
+# Add dependency for documentation
+add_dependencies(clean-bin clean-script)
 
 # ---------------------------
 # Final Configuration Summary
