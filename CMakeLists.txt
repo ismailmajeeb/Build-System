@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(MyCppProject LANGUAGES CXX)
+project(main LANGUAGES CXX)
 
 # ---------------------------
 # Directory Setup
@@ -55,9 +55,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# C++ standard configuration
+# C++ standard configuration - set the variable first
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Then apply to the target (this is still good practice)
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 20
+    CXX_STANDARD ${CMAKE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
