@@ -131,15 +131,39 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # This line runs the executable
 )
 
-# Enhanced clean target
-add_custom_target(clean-all
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-    COMMENT "Removing all build artifacts and binaries..."
-)
+# Enhanced clean target that works cross-platform
+if(CMAKE_HOST_WIN32)
+    # Windows-specific clean command using a batch file
+    add_custom_target(clean-all
+        COMMAND ${CMAKE_COMMAND} -E echo "Cleaning all build artifacts..."
+        # Clean everything except the build directory itself
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
+        # Create a batch file that will delete the build directory
+        COMMAND ${CMAKE_COMMAND} -E echo "@echo off" > ${CMAKE_BINARY_DIR}/clean_build.bat
+        COMMAND ${CMAKE_COMMAND} -E echo "timeout /t 1 /nobreak > nul" >> ${CMAKE_BINARY_DIR}/clean_build.bat
+        COMMAND ${CMAKE_COMMAND} -E echo "rmdir /s /q \"${CMAKE_BINARY_DIR}\"" >> ${CMAKE_BINARY_DIR}/clean_build.bat
+        COMMAND ${CMAKE_COMMAND} -E echo "echo Build directory cleaned!" >> ${CMAKE_BINARY_DIR}/clean_build.bat
+        # Run the batch file in a separate process
+        COMMAND start cmd.exe /c ${CMAKE_BINARY_DIR}/clean_build.bat
+        COMMENT "Removing build artifacts and scheduling build directory cleanup..."
+    )
+else()
+    # Linux/Unix clean command
+    add_custom_target(clean-all
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        # For Linux, we can use a shell script to clean the build directory
+        COMMAND ${CMAKE_COMMAND} -E echo "#!/bin/sh" > ${CMAKE_BINARY_DIR}/clean_build.sh
+        COMMAND ${CMAKE_COMMAND} -E echo "sleep 1" >> ${CMAKE_BINARY_DIR}/clean_build.sh
+        COMMAND ${CMAKE_COMMAND} -E echo "rm -rf \"${CMAKE_BINARY_DIR}\"" >> ${CMAKE_BINARY_DIR}/clean_build.sh
+        COMMAND ${CMAKE_COMMAND} -E echo "echo Build directory cleaned!" >> ${CMAKE_BINARY_DIR}/clean_build.sh
+        COMMAND chmod +x ${CMAKE_BINARY_DIR}/clean_build.sh
+        COMMAND ${CMAKE_BINARY_DIR}/clean_build.sh &
+        COMMENT "Removing all build artifacts and binaries..."
+    )
+endif()
 
 # ---------------------------
 # Final Configuration Summary
