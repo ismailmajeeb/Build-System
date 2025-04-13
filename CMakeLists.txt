@@ -55,12 +55,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# C++ standard configuration - set the variable first
+# C++ standard configuration
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Then apply to the target (this is still good practice)
+# Apply C++ standard to the target
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD ${CMAKE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED ON
@@ -130,67 +130,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "Executable: $<TARGET_FILE:${PROJECT_NAME}>"
     COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # This line runs the executable
 )
-
-# Revised clean targets - split into separate operations
-# Clean binaries target - safe to run from within the build system
-add_custom_target(clean-all
-    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning binary outputs..."
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-    COMMENT "Removing binary output files..."
-)
-
-# Instructions for full cleanup
-add_custom_target(clean-instructions
-    COMMAND ${CMAKE_COMMAND} -E echo
-    COMMAND ${CMAKE_COMMAND} -E echo "===== CLEAN OPERATION INSTRUCTIONS ====="
-    COMMAND ${CMAKE_COMMAND} -E echo "To completely clean the project:"
-    COMMAND ${CMAKE_COMMAND} -E echo "1. First run: cmake --build . --target clean-bin"
-    COMMAND ${CMAKE_COMMAND} -E echo "2. Then manually delete the build directory from outside"
-    COMMAND ${CMAKE_COMMAND} -E echo "   the build system (or use the clean-script below)"
-    COMMAND ${CMAKE_COMMAND} -E echo
-    COMMAND ${CMAKE_COMMAND} -E echo "===== CLEANUP SCRIPT CREATED ====="
-)
-
-# Generate cleanup script based on platform
-if(CMAKE_HOST_WIN32)
-    # Windows batch script
-    file(WRITE ${CMAKE_SOURCE_DIR}/clean-project.bat
-        "@echo off\n"
-        "echo Cleaning project...\n"
-        "if exist bin rmdir /s /q bin\n"
-        "if exist build rmdir /s /q build\n"
-        "mkdir bin\n"
-        "echo Project cleaned successfully!\n"
-        "pause\n"
-    )
-    add_custom_target(clean-script
-        COMMAND ${CMAKE_COMMAND} -E echo "Windows cleanup script created at: ${CMAKE_SOURCE_DIR}/clean-project.bat"
-        COMMAND ${CMAKE_COMMAND} -E echo "Run this script from Explorer or command prompt when cmake is not running."
-        DEPENDS clean-instructions
-        COMMENT "Generating Windows cleanup script..."
-    )
-else()
-    # Unix shell script
-    file(WRITE ${CMAKE_SOURCE_DIR}/clean-project.sh
-        "#!/bin/sh\n"
-        "echo Cleaning project...\n"
-        "rm -rf bin\n"
-        "rm -rf build\n"
-        "mkdir -p bin\n"
-        "echo Project cleaned successfully!\n"
-    )
-    add_custom_target(clean-script
-        COMMAND chmod +x ${CMAKE_SOURCE_DIR}/clean-project.sh
-        COMMAND ${CMAKE_COMMAND} -E echo "Unix cleanup script created at: ${CMAKE_SOURCE_DIR}/clean-project.sh"
-        COMMAND ${CMAKE_COMMAND} -E echo "Run this script from terminal when cmake is not running."
-        DEPENDS clean-instructions
-        COMMENT "Generating Unix cleanup script..."
-    )
-endif()
-
-# Add dependency for documentation
-add_dependencies(clean-bin clean-script)
 
 # ---------------------------
 # Final Configuration Summary
