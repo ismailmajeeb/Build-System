@@ -1,8 +1,10 @@
+Certainly! Here's a refined and reorganized version of your `README.md` file to make it more readable, informative, and user-friendly:
+
 # C++ Build Systems
 
-This Repository provides two complete build system configurations for C++ projects:
+This repository provides two complete build system configurations for C++ projects:
 
-1. **Makefile** - Traditional GNU Make setup (Linux-focused)
+1. **Makefile** - Traditional GNU Make setup (Linux/MacOS-focused)
 2. **CMakeLists.txt** - Modern cross-platform CMake configuration
 
 ## Table of Contents
@@ -32,30 +34,31 @@ This Repository provides two complete build system configurations for C++ projec
 
 ## Prerequisites
 
-- **Makefile**:
+### Makefile
 
-  - GNU Make 4.1+
-  - GCC 11+ or Clang 14+
-  - Linux/MacOS or Windows WSL
+- GNU Make 4.1+
+- GCC 11+ or Clang 14+
+- Linux/MacOS or Windows WSL
 
-- **CMake**:
-  - CMake 3.15+
-  - Any C++20 compiler:
-    - MSVC 2022 (Windows)
-    - MinGW-w64 8.1+ (Windows)
-    - GCC 11+ (Linux)
-    - Clang 14+ (MacOS)
+### CMake
+
+- CMake 3.15+
+- Any C++20 compiler:
+  - MSVC 2022 (Windows)
+  - MinGW-w64 8.1+ (Windows)
+  - GCC 11+ (Linux)
+  - Clang 14+ (MacOS)
 
 ## Makefile Usage (Linux/MacOS)
 
-### Makefile Key Features
+### Key Features
 
 - Strict C++20 compliance checks
 - Automatic source discovery
 - Debug/Release mode switching
 - Clean build artifacts
 
-### Makefile Commands
+### Commands
 
 ```bash
 # Build debug version (default)
@@ -90,7 +93,7 @@ make clean
 
 ## CMake Usage (Windows/Linux/MacOS)
 
-### CMake Key Features
+### Key Features
 
 - Cross-platform support
 - IDE project generation
@@ -117,7 +120,7 @@ cmake -S . -B build -G "Visual Studio 17 2022"
 cmake -S . -B build -G "MinGW Makefiles"
 ```
 
-### CMake Commands
+### Cross-Platform Commands
 
 ```bash
 # Configure project (general)
@@ -125,9 +128,6 @@ cmake -S . -B build [-G "Generator Name"]
 
 # Build project
 cmake --build build [--config Release]
-
-# Clean artifacts
-cmake --build build --target clean-all
 
 # Run executable (Windows)
 .\bin\main.exe
@@ -137,14 +137,15 @@ cmake --build build --target clean-all
 ```
 
 **Common Generators:**
-| Platform | Generator Command |
-|-----------|--------------------------------|
-| Windows | `-G "Visual Studio 17 2022"` |
-| | `-G "MinGW Makefiles"` |
-| Linux | `-G "Unix Makefiles"` |
-| MacOS | `-G "Xcode"` |
 
-**Example Workflow:**
+| Platform | Generator Command            |
+| -------- | ---------------------------- |
+| Windows  | `-G "Visual Studio 17 2022"` |
+|          | `-G "MinGW Makefiles"`       |
+| Linux    | `-G "Unix Makefiles"`        |
+| MacOS    | `-G "Xcode"`                 |
+
+### Example Workflow
 
 ```powershell
 # Configure with MinGW
@@ -152,24 +153,61 @@ cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
 
 # Build release version
 cmake --build build
-
-# Clean everything
-cmake --build build --target clean-all
 ```
+
+### Cleaning Build Artifacts
+
+This project follows a build process where:
+
+1. Intermediate build files are generated in a separate `build/` directory (standard CMake practice).
+2. For convenience during development, the final compiled executable is placed in a `bin/` directory located directly within the project's source code tree.
+
+Because of step 2, the standard CMake clean command (`cmake --build . --target clean`, `make clean`, or `ninja clean`) **is not sufficient** for a complete cleanup. It will remove files inside the `build/` directory, but it **will not** touch the `bin/` directory in your source tree.
+
+#### Full Cleanup Scripts
+
+To provide a simple, one-step method for removing _all_ build-related output (both the `build/` directory and the `bin/` directory), use the following scripts located in the project root:
+
+- **For Linux, macOS, or Git Bash on Windows:**
+
+  - `clean.sh`
+  - **Usage:**
+    1. First, make the script executable (you only need to do this once):
+
+       ```bash
+       chmod +x clean.sh
+       ```
+
+    2. Run the script from the project's **root directory**:
+
+       ```bash
+       ./clean.sh
+       ```
+
+- **For Windows Command Prompt or PowerShell:**
+  - `clean.bat`
+  - **Usage:**
+    1. Run the script from the project's **root directory**:
+
+       ```bat
+       .\clean.bat
+       ```
+
+Running the appropriate script will permanently delete both the `build/` and `bin/` directories and their contents, allowing you to start a completely fresh build.
 
 ## Project Structure
 
-Both build systems expect:
+Both build systems expect the following project structure:
 
 ```
 project-root/
-├── src/        # Source files (.cpp, .cc, .cxx)
+├── src/              # Source files (.c, .cpp, .cc, .cxx)
 │   ├── main.cpp
 │   └── ...
-├── bin/        # Generated executables
-├── obj/        # Object files (Makefile only)
-├── Makefile    # Linux build config
-└── CMakeLists.txt # Cross-platform config
+├── bin/              # Generated executables
+├── obj/              # Object files (Makefile only)
+├── Makefile          # Linux build config
+└── CMakeLists.txt    # Cross-platform config
 ```
 
 ## Choosing a Build System
@@ -196,3 +234,7 @@ Both systems enforce:
 - Multiple compiler support
 
 **Note:** The CMake configuration is recommended for new projects due to its cross-platform capabilities and modern features.
+
+---
+
+This refined `README.md` provides a clear and organized overview of the build systems, making it easier for users to understand and use them effectively.

@@ -4,42 +4,74 @@ project(main LANGUAGES CXX)
 # ---------------------------
 # Directory Setup
 # ---------------------------
-# Create essential directories
-file(MAKE_DIRECTORY
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/bin
-)
+# Create the bin directory directly in the source tree for output.
+# This deviates from strict out-of-source principles for convenience.
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+message(STATUS "Output directory set to: ${PROJECT_SOURCE_DIR}/bin (inside source tree)")
 
 # ---------------------------
 # Build Configuration
 # ---------------------------
 # Set default build type with clear feedback
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type: Debug or Release" FORCE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the build type: Debug, Release" FORCE)
     message(STATUS "Build type not specified - defaulting to ${CMAKE_BUILD_TYPE}")
 endif()
 
 # Configure output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # ---------------------------
 # File Discovery
 # ---------------------------
 # Find source files with multiple extensions
+message(STATUS "Searching for source files in: ${PROJECT_SOURCE_DIR}/src")
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-    "src/*.cpp"
-    "src/*.cc"
-    "src/*.cxx"
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/*.cc"
+    "${PROJECT_SOURCE_DIR}/src/*.cxx"
+)
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/*.h"
+    "${PROJECT_SOURCE_DIR}/src/*.hpp"
+    "${PROJECT_SOURCE_DIR}/src/*.hxx"
 )
 
-# Find header files
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
-    "src/*.h"
-    "src/*.hpp"
-    "src/*.hxx"
-)
+# ---------------------------
+# File Discovery Feedback
+# ---------------------------
+if(NOT SOURCES)
+    message(FATAL_ERROR "No source files found in '${PROJECT_SOURCE_DIR}/src'.")
+endif()
+
+message(STATUS "Source Files Found:")
+foreach(source ${SOURCES})
+    file(RELATIVE_PATH rel_source ${PROJECT_SOURCE_DIR} ${source})
+    message(STATUS " - ${rel_source}")
+endforeach()
+
+# message(STATUS "Source Files Found:")
+# if(SOURCES)
+#     foreach(source ${SOURCES})
+#         file(RELATIVE_PATH rel_source ${PROJECT_SOURCE_DIR} ${source})
+#         message(STATUS " - ${rel_source}")
+#     endforeach()
+# else()
+#     message(WARNING " No source files found in src directory!")
+#     message(FATAL_ERROR "No Source files found in '${PROJECT_SOURCE_DIR}/src'.")
+# endif()
+#
+# message(STATUS "\nHeader Files Found:")
+# if(HEADERS)
+#     foreach(header ${HEADERS})
+#         file(RELATIVE_PATH rel_header ${PROJECT_SOURCE_DIR} ${header})
+#         message(STATUS " - ${rel_source}")
+#     endforeach()
+# else()
+#     message(WARNING "No Header files found in '${PROJECT_SOURCE_DIR}/src'.")
+# endif()
 
 # ---------------------------
 # Target Configuration
@@ -84,6 +116,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wextra
         -Wconversion
         -Wsign-conversion
+        # -Wshadow        # Warn when variable shadows another
+        # -Wformat=2      # Check printf/scanf format strings
+        # -Wundef         # Warn if identifier is evaluated in #if untested
         $<$<CONFIG:Debug>:-ggdb>
         $<$<CONFIG:Release>:-O2 -DNDEBUG>
     )
@@ -99,26 +134,6 @@ elseif(MSVC)
     )
 endif()
 
-# ---------------------------
-# File Discovery Feedback
-# ---------------------------
-message(STATUS "\nSource Files:")
-if(SOURCES)
-    foreach(source ${SOURCES})
-        message(STATUS " - ${source}")
-    endforeach()
-else()
-    message(WARNING " No source files found in src directory!")
-endif()
-
-message(STATUS "\nHeader Files:")
-if(HEADERS)
-    foreach(header ${HEADERS})
-        message(STATUS " - ${header}")
-    endforeach()
-else()
-    message(STATUS " No headers found - creating empty src structure")
-endif()
 
 # ---------------------------
 # Build Feedback & Utilities
@@ -126,18 +141,35 @@ endif()
 # Post-build information
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo
-    COMMAND ${CMAKE_COMMAND} -E echo "Build successful!"
-    COMMAND ${CMAKE_COMMAND} -E echo "Executable: $<TARGET_FILE:${PROJECT_NAME}>"
-    COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # This line runs the executable
+    COMMAND ${CMAKE_COMMAND} -E echo "--------------------------------------------------"
+    COMMAND ${CMAKE_COMMAND} -E echo "${PROJECT_NAME} Build Successful!"
+    COMMAND ${CMAKE_COMMAND} -E echo "Executable located at: $<TARGET_FILE:${PROJECT_NAME}>"
+    COMMAND ${CMAKE_COMMAND} -E echo "--------------------------------------------------"
+    COMMAND ${CMAKE_COMMAND} -E echo "--- Running Executable ---"
+    COMMAND ${CMAKE_COMMAND} -E echo
+    COMMAND $<TARGET_FILE:${PROJECT_NAME}>  # <-- This line runs the executable
+    COMMAND ${CMAKE_COMMAND} -E echo
+    COMMAND ${CMAKE_COMMAND} -E echo "--- Execution Finished ---"
+    COMMAND ${CMAKE_COMMAND} -E echo "--------------------------------------------------"
+    VERBATIM
 )
 
 # ---------------------------
 # Final Configuration Summary
 # ---------------------------
 message(STATUS "\nProject Configuration Summary:")
+message(STATUS " - Project Name:        ${PROJECT_NAME}")
 message(STATUS " - Source directory:    ${CMAKE_SOURCE_DIR}/src")
+message(STATUS " - Build Directory:     ${PROJECT_BINARY_DIR}")
 message(STATUS " - Output directory:    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS " - C++ standard:        ${CMAKE_CXX_STANDARD}")
 message(STATUS " - Build type:          ${CMAKE_BUILD_TYPE}")
 message(STATUS " - Compiler:            ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "\nConfigured successfully! Use 'cmake --build build' to compile\n")
+message(STATUS " ------------------------------")
+message(STATUS "Configuration successful! To build, navigate to the build directory ('${PROJECT_BINARY_DIR}') and run:")
+message(STATUS "   cmake --build .")
+message(STATUS "Or run: cmake --build build")
+message(STATUS "To run the executable after building:")
+message(STATUS "   ./${PROJECT_NAME}  (or .\\${CMAKE_BUILD_TYPE}\\${PROJECT_NAME}.exe on Windows)")
+message(STATUS "-------------------------------\n")
+
