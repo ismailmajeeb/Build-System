@@ -1,5 +1,3 @@
-Certainly! Here's a refined and reorganized version of your `README.md` file to make it more readable, informative, and user-friendly:
-
 # C++ Build Systems
 
 This repository provides two complete build system configurations for C++ projects:
@@ -172,6 +170,7 @@ To provide a simple, one-step method for removing _all_ build-related output (bo
 
   - `clean.sh`
   - **Usage:**
+
     1. First, make the script executable (you only need to do this once):
 
        ```bash
@@ -185,8 +184,10 @@ To provide a simple, one-step method for removing _all_ build-related output (bo
        ```
 
 - **For Windows Command Prompt or PowerShell:**
+
   - `clean.bat`
   - **Usage:**
+
     1. Run the script from the project's **root directory**:
 
        ```bat
@@ -236,5 +237,3 @@ Both systems enforce:
 **Note:** The CMake configuration is recommended for new projects due to its cross-platform capabilities and modern features.
 
 ---
-
-This refined `README.md` provides a clear and organized overview of the build systems, making it easier for users to understand and use them effectively.
