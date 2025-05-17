@@ -51,16 +51,24 @@ This repository provides two complete build system configurations for C++ projec
 
 ### Key Features
 
-- Strict C++20 compliance checks
+- Strict C++23 compliance checks
 - Automatic source discovery
 - Debug/Release mode switching
 - Clean build artifacts
 
 ### Commands
 
+To use this Makefile:
+
 ```bash
 # Build debug version (default)
 make
+
+# Build and run:
+make run
+
+# Build debug version
+make mode=debug
 
 # Build release version
 make mode=release
